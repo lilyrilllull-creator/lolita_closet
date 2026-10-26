@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html xmlns:th="http://thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<title>My Lolita Closet - ログイン</title>
+	<style>
+		body {
+			font-family: 'Meiryo UI', sans-serif;
+			background-color: #fcfcfc;
+			margin: 0;
+			padding: 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			height: 100vh;
+			color: #333;
+		}
+
+		/* 🏰 ログインカード中央の美しいお城の形をしたボックス */
+		.login-container {
+			background: white;
+			border: 2px solid #e0cfeb;
+			border-radius: 12px;
+			width: 100%;
+			max-width: 400px;
+			padding: 40px;
+			box-sizing: border-box;
+			box-shadow: 0 10px 30px rgba(31, 73, 125, 0.06);
+			text-align: center;
+		}
+
+		.logo-area {
+			font-size: 24px;
+			font-weight: bold;
+			color: #1f497d;
+			margin-bottom: 8px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 8px;
+		}
+
+		.sub-title {
+			font-size: 13px;
+			color: #666;
+			margin-bottom: 30px;
+			letter-spacing: 0.5px;
+		}
+
+		/* 💌 入力フォームのデザイン */
+		.form-group {
+			text-align: left;
+			margin-bottom: 20px;
+		}
+
+		.form-label {
+			font-size: 12px;
+			font-weight: bold;
+			color: #1f497d;
+			display: block;
+			margin-bottom: 6px;
+		}
+
+		.form-input {
+			width: 100%;
+			padding: 12px 15px;
+			border: 1px solid #ccc;
+			border-radius: 6px;
+			font-size: 14px;
+			box-sizing: border-box;
+			font-family: inherit;
+		}
+
+		.form-input:focus {
+			border-color: #1f497d;
+			outline: none;
+			box-shadow: 0 0 5px rgba(31, 73, 125, 0.1);
+		}
+
+		/* 🎀 ボタン */
+		.btn-login {
+			width: 100%;
+			padding: 12px;
+			background-color: #1f497d;
+			color: white;
+			border: none;
+			border-radius: 6px;
+			font-size: 15px;
+			font-weight: bold;
+			cursor: pointer;
+			margin-top: 10px;
+			transition: background-color 0.2s;
+		}
+
+		.btn-login:hover {
+			background-color: #143256;
+		}
+
+		/* ⚠️ 警告・メッセージエリア */
+		.alert {
+			padding: 12px;
+			border-radius: 6px;
+			font-size: 13px;
+			margin-bottom: 20px;
+			text-align: left;
+			line-height: 1.5;
+		}
+
+		.alert-error {
+			background-color: #fdf2f2;
+			border: 1px solid #f8b4b4;
+			color: #9b1c1c;
+		}
+
+		.alert-info {
+			background-color: #edf5ff;
+			border: 1px solid #b4d3fe;
+			color: #1e429f;
+		}
+	</style>
+</head>
+
+<body>
+
+	<div class="login-container">
+		<div class="logo-area">🏰 My Lolita Closet</div>
+		<div class="sub-title">秘密のデジタルクローゼットへようこそ</div>
+		<!-- ⚠️ ① ログイン失敗時のエラーメッセージ表示（Spring Securityが自動で仕込むセッションエラーを検知） -->
+		<div th:if="${param.error}" class="alert alert-error">
+			🎀 お嬢様、ユーザー名かパスワードが間違っているみたい……。もう一度確認してみてね。🌹
+		</div>
+
+		<!-- ⚠️ ② ログアウト成功時のインフォメーションメッセージ表示 -->
+		<div th:if="${param.logout}" class="alert alert-info">
+			🏰 ログアウトが完了いたしました。またのお部屋への帰還を心よりお待ちしております。🎀
+		</div>
+		
+		<!-- 🌸【追記】新規ユーザー登録が完璧に大成功した時のウェルカムアラート -->
+		<div th:if="${param.success}" class="alert alert-info" style="background-color: #f7effc; border: 1px solid #e0cfeb; color: #1f497d;">
+		    ✨ おめでとうございます、お嬢様！新しくあなた専用の秘密のクローゼットが開設されましたわ。さっそくお部屋にお入りくださいね。🌹
+		</div>
+
+
+		<!-- 🌸 ③ 【本番認証フォーム】SecurityConfigで定義したパラメーター名（username, password）とname属性を完全に一致させます -->
+		<form th:action="@{/login}" method="post">
+
+			<!-- ユーザー名入力欄 -->
+			<div class="form-group">
+				<label for="username" class="form-label">ユーザー名</label>
+				<input type="text" id="username" name="username" class="form-input" placeholder="例: maid_alice" required
+					autofocus>
+			</div>
+
+			<!-- パスワード入力欄 -->
+			<div class="form-group">
+				<label for="password" class="form-label">パスワード</label>
+				<input type="password" id="password" name="password" class="form-input" placeholder="••••••••" required>
+			</div>
+
+			<!-- ログイン実行ボタン -->
+			<button type="submit" class="btn-login">お部屋に入る 🎀</button>
+
+		</form>
+		
+		<!-- 🌸【追記】新規クローゼット開設画面（/register）への可愛い案内リンク -->
+		<a th:href="@{/register}" class="nav-link" style="font-size: 13px; color: #1f497d; text-decoration: none; font-weight: bold; display: inline-flex; margin-top: 25px; border-bottom: 1px dashed #1f497d; padding-bottom: 2px;">
+		    初めての方、新規クローゼット開設はこちら 🏰
+		</a>
+
+
+	</div>
+</body>
+
+</html>

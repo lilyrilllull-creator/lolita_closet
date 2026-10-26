@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html xmlns:th="http://thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<title>My Lolita Closet - AIコーディネート相談ルーム</title>
+	<style>
+		body {
+			font-family: 'Meiryo UI', sans-serif;
+			margin: 0;
+			padding: 0;
+			background-color: #fcfcfc;
+			color: #333;
+			height: 100vh;
+			display: flex;
+			flex-direction: column;
+		}
+
+		h1 {
+			margin: 0;
+			padding: 15px 40px;
+			background: white;
+			border-bottom: 2px solid #1f497d;
+			color: #1f497d;
+			font-size: 20px;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+		}
+
+		/* 🏰 画面を左右にセパレートする極上の2カラムコンテナ */
+		.room-container {
+			display: flex;
+			flex: 1;
+			overflow: hidden;
+		}
+
+		/* 👗 左カラム：主役のお洋服プロフィール部屋 */
+		.profile-side {
+			width: 35%;
+			min-width: 320px;
+			background: #fff;
+			border-right: 1px solid #e0cfeb;
+			padding: 30px;
+			box-sizing: border-box;
+			display: flex;
+			flex-direction: column;
+			gap: 20px;
+			overflow-y: auto;
+		}
+
+		.profile-image-box {
+			width: 100%;
+			aspect-ratio: 3 / 4;
+			border-radius: 8px;
+			overflow: hidden;
+			background: #eee;
+			box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+		}
+
+		.profile-image {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+		}
+
+		.profile-no-image {
+			width: 100%;
+			height: 100%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 64px;
+			background: #e0d0d8;
+		}
+
+		.profile-card {
+			background: #fdfafc;
+			border: 1px solid #e0cfeb;
+			border-radius: 6px;
+			padding: 20px;
+		}
+
+		.profile-title {
+			font-size: 16px;
+			font-weight: bold;
+			color: #1f497d;
+			margin-bottom: 12px;
+			border-bottom: 1px dashed #e0cfeb;
+			padding-bottom: 5px;
+		}
+
+		.profile-row {
+			font-size: 13px;
+			margin-bottom: 8px;
+			display: flex;
+		}
+
+		.profile-label {
+			font-weight: bold;
+			color: #555;
+			width: 90px;
+			shrink: 0;
+		}
+
+		/* 💬 右カラム：LINE風の可愛いパステルチャット空間 */
+		.chat-side {
+			width: 65%;
+			display: flex;
+			flex-direction: column;
+			background: #f5f0f6;
+			position: relative;
+		}
+
+		.chat-timeline {
+			flex: 1;
+			padding: 25px 30px;
+			overflow-y: auto;
+			display: flex;
+			flex-direction: column;
+			gap: 15px;
+		}
+
+		/* 🎀 バルーン（吹き出し）の可愛いお洒落デザイン */
+		.msg-row {
+			display: flex;
+			width: 100%;
+			margin-bottom: 5px;
+		}
+
+		.msg-row.user {
+			justify-content: flex-end;
+		}
+
+		.msg-row.assistant {
+			justify-content: flex-start;
+		}
+
+		.bubble {
+			max-width: 75%;
+			padding: 12px 18px;
+			border-radius: 14px;
+			font-size: 14px;
+			line-height: 1.7;
+			white-space: pre-wrap;
+			word-break: break-all;
+			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+		}
+
+		.msg-row.user .bubble {
+			background-color: #1f497d;
+			color: white;
+			border-bottom-right-radius: 2px;
+		}
+
+		.msg-row.assistant .bubble {
+			background-color: white;
+			color: #333;
+			border: 1px solid #e0cfeb;
+			border-bottom-left-radius: 2px;
+		}
+
+		/* 📥 下段の文字打ち込み入力フォームエリア */
+		.input-area {
+			background: white;
+			border-top: 1px solid #e0cfeb;
+			padding: 15px 30px;
+			display: flex;
+			gap: 15px;
+			align-items: center;
+			box-shadow: 0 -3px 10px rgba(0, 0, 0, 0.01);
+		}
+
+		.chat-input {
+			flex: 1;
+			padding: 12px 15px;
+			border: 1px solid #ccc;
+			border-radius: 6px;
+			font-size: 14px;
+			font-family: inherit;
+			box-sizing: border-box;
+		}
+
+		.chat-input:focus {
+			border-color: #1f497d;
+			outline: none;
+		}
+
+		.btn {
+			display: inline-block;
+			padding: 11px 25px;
+			background-color: #1f497d;
+			color: white;
+			text-decoration: none;
+			border-radius: 4px;
+			font-weight: bold;
+			border: none;
+			cursor: pointer;
+			font-size: 14px;
+			white-space: nowrap;
+		}
+
+		.btn:hover {
+			background-color: #143256;
+		}
+
+		.btn-back {
+			display: inline-block;
+			padding: 8px 18px;
+			background-color: white;
+			color: #1f497d;
+			border: 1px solid #1f497d;
+			text-decoration: none;
+			border-radius: 4px;
+			font-weight: bold;
+			font-size: 13px;
+		}
+
+		.btn-back:hover {
+			background-color: #f0f4f8;
+		}
+	</style>
+</head>
+
+<body>
+
+	<!-- 🏰 最上部：ヘッダー -->
+	<h1>
+		<span>🏰 My Lolita Closet - コーディネート相談室</span>
+		<!-- 詳細画面（/items/{id}）へ戻るエレガントな戻るボタン -->
+		<a th:href="@{/items/{id}(id=${item.itemId})}" class="btn-back">🎀 お洋服詳細に戻る</a>
+	</h1>
+
+	<div class="room-container">
+
+		<!-- 👗 左カラム：主役お洋服のプロフィール（カテゴリ追加＆カラー表示完全修正版） -->
+		<div class="profile-side">
+		    <div class="profile-image-box">
+		        <img th:if="${item.images != null and not #lists.isEmpty(item.images)}" 
+		             th:src="@{/uploads/{path}(path=${item.images[0].imagePath})}" 
+		             class="profile-image" alt="主役お洋服の写真">
+		        <div th:if="${item.images == null or #lists.isEmpty(item.images)}" class="profile-no-image">👗</div>
+		    </div>
+		    
+		    <div class="profile-card">
+		        <div class="profile-title" th:text="${item.itemName}">ここにドレス名が入る</div>
+		        <div class="profile-row"><span class="profile-label">🏰 ブランド:</span><span th:text="${brandName}">Angelic Pretty</span></div>
+		        
+		        <!-- 🌸 【新設】お洋服のカテゴリ大分類を美しく常時表示します -->
+		        <div class="profile-row"><span class="profile-label">🫖 カテゴリ:</span><span th:text="${categoryName}">ジャンパースカート</span></div>
+		        
+		        <!-- 🌸 【完全修正】バグの原因だったitem.colorを廃止し、Javaから届いた本物のカラー名に変えました -->
+		        <div class="profile-row"><span class="profile-label">🎨 カラー系統:</span><span th:text="${colorName}">ピンク</span></div>
+		        
+		        <div class="profile-row"><span class="profile-label">📏 着丈寸法:</span><span th:text="${item.lengthCm != null} ? ${item.lengthCm} + 'cm' : '未登録'">92cm</span></div>
+		        <div class="profile-row"><span class="profile-label">💰 購入価格:</span><span th:text="${item.purchasePrice != null} ? ${#numbers.formatInteger(item.purchasePrice, 1, 'COMMA')} : '0'">0</span>円</div>
+		    </div>
+		</div>
+
+		<!-- 💬 右カラム：LINE風の可愛いパステルチャット空間（構文エラー完全根絶版） -->
+		<div class="chat-side">
+		    
+		    <!-- チャットタイムライン（スクロールエリア） -->
+		    <div class="chat-timeline" id="chatTimeline">
+		        
+		        <!-- 🏰 AIからの最初のウェルカムメッセージ（初期配置） -->
+		        <div class="msg-row assistant">
+		            <div class="bubble">お嬢様、素晴らしいクローゼットの情報をありがとうございます！🏰 クローゼットのすべてのお洋服と小物の名前を完璧に記憶いたしましたわ。さあ、本日の主役ドレスを引き立てる特別なコーディネートの魔法を始めましょう！どのようなことでもお気軽にご相談くださいね。🌹</div>
+		        </div>
+		        
+		        <!-- 🌸 【過去の記憶の自動復元】タイポを100%修正し、安全にラリーログを自動描写します -->
+		        <div th:each="chat : ${chatHistory}" th:class="'msg-row ' + ${chat.role}">
+		            <div class="bubble" th:text="${chat.content}">過去の発言内容</div>
+		        </div>
+		        
+		    </div>
+		    
+		    <!-- 📥 下段の文字打ち込み入力フォームエリア -->
+		    <div class="input-area">
+		        <input type="text" id="userInput" class="chat-input" placeholder="AIスタイリストにコーディネートの相談をしましょう..." 
+		               onkeypress="if(event.key === 'Enter') sendRoomMessage()">
+		        <button type="button" id="btnSend" onclick="sendRoomMessage()" class="btn">✨ 相談する</button>
+		    </div>
+		    
+		</div>
+
+	<!-- 🌟 【極上のUX】リロードなしでタイムラインに吹き出しを追加する非同期スクリプト -->
+	<script th:inline="javascript">
+		// 画面を開いた瞬間に、タイムラインを一番下（最新の発言位置）まで自動スクロール
+		window.addEventListener('DOMContentLoaded', () => {
+		    // 🌸 初期表示されている過去ログに対してもリンク化を適用します
+		    applyItemLinksToAll();
+		    scrollToBottom();
+		});
+
+		function scrollToBottom() {
+		    const timeline = document.getElementById('chatTimeline');
+		    if (timeline) {
+		        timeline.scrollTop = timeline.scrollHeight;
+		    }
+		}
+
+		/**
+		 * 🌸 【新設コアロジック】AIの文章内の「[ID: 数字]」という記述を検知し、可愛いジャンプリンクへ魔法のように置換します
+		 */
+		function convertTextToItemLinks(rawText) {
+		    // 正規表現で「[ID: 123]」や「[ID:123]」といったパターンを狙い撃ちします
+		    const regex = /\[ID:\s*(\d+)\]/g;
+		    
+		    // マッチした部分を、可愛いデザインを施した詳細画面へのリンク（<a>タグ）へ自動書き換え！
+		    return rawText.replace(regex, (match, id) => {
+		        return `<a href="/items/${id}" target="_blank" style="color: #d15184; font-weight: bold; text-decoration: none; border-bottom: 1px dashed #d15184; padding: 2px 4px; background: #fff0f5; border-radius: 4px; margin: 0 2px; font-size: 13px; display: inline-flex; align-items: center; gap: 2px;" title="別タブでお洋服の詳細を見る">👗 詳細へ</a>`;
+		    });
+		}
+
+		// タイムライン上にあるすべてのAI（assistant）の吹き出しにリンク化を適用する関数
+		function applyItemLinksToAll() {
+		    const bubbles = document.querySelectorAll('.msg-row.assistant .bubble');
+		    bubbles.forEach(bubble => {
+		        // すでにリンク化処理済みのものはスキップ
+		        if (bubble.getAttribute('data-linked') === 'true') return;
+		        
+		        const originalText = bubble.textContent;
+		        const linkedHtml = convertTextToItemLinks(originalText);
+		        
+		        // HTMLとして安全に流し込み、処理済みフラグを立てます
+		        bubble.innerHTML = linkedHtml;
+		        bubble.setAttribute('data-linked', 'true');
+		    });
+		}
+
+		// 💌 メッセージを安全に非同期送信する関数
+		function sendRoomMessage() {
+		    const input = document.getElementById('userInput');
+		    const btn = document.getElementById('btnSend');
+		    const timeline = document.getElementById('chatTimeline');
+		    const messageText = input.value.trim();
+
+		    if (!messageText) return;
+
+		    // 1. ユーザーの入力した吹き出しを画面の右側にパッと先行追加
+		    const userRow = document.createElement('div');
+		    userRow.className = 'msg-row user';
+		    const userBubble = document.createElement('div');
+		    userBubble.className = 'bubble';
+		    userBubble.textContent = messageText;
+		    userRow.appendChild(userBubble);
+		    timeline.appendChild(userRow);
+
+		    // 入力欄をクリアしてロック、スクロールを最下部へ
+		    input.value = '';
+		    input.disabled = true;
+		    btn.disabled = true;
+		    scrollToBottom();
+
+		    // 2. AIが考えている間の「...」点滅風吹き出しを左側に仮配置
+		    const aiRow = document.createElement('div');
+		    aiRow.className = 'msg-row assistant';
+		    const aiBubble = document.createElement('div');
+		    aiBubble.className = 'bubble';
+		    aiBubble.innerHTML = '<span style="color:#1f497d; font-weight:bold;">🎀 お嬢様のためにコーデ案を考えています... 🌹</span>';
+		    aiRow.appendChild(aiBubble);
+		    timeline.appendChild(aiRow);
+		    scrollToBottom();
+
+		    // URLのパスから安全に主役服のIDを取得
+		    const pathArray = window.location.pathname.split('/');
+		    const itemId = pathArray[pathArray.length - 2]; 
+
+		    const formData = new FormData();
+		    formData.append('message', messageText);
+
+		    fetch(`/items/${itemId}/ai-room/send`, {
+		        method: 'POST',
+		        body: formData
+		    })
+		    .then(response => response.json())
+		    .then(data => {
+		        // 通信成功！「考えています...」の仮吹き出しを、本物のAIの可愛いお返事テキストで書き換えます
+		        if (data.reply) {
+		            // 🌸【ここが進化！】AIから戻ってきた生の文章を、一瞬でリンク付きHTMLにコンバートして流し込みます！
+		            aiBubble.innerHTML = convertTextToItemLinks(data.reply);
+		            aiBubble.setAttribute('data-linked', 'true');
+		        } else if (data.error) {
+		            aiBubble.textContent = data.error;
+		        }
+		        
+		        input.disabled = false;
+		        btn.disabled = false;
+		        input.focus();
+		        scrollToBottom();
+		    })
+		    .catch(error => {
+		        console.error('チャットルーム通信エラー:', error);
+		        aiBubble.textContent = "🎀 ごめんなさい、お茶会の準備が少し混み合っていて通信に失敗しちゃったみたい……。もう一度送ってみてね！";
+		        input.disabled = false;
+		        btn.disabled = false;
+		        scrollToBottom();
+		    });
+		}
+
+	</script>
+</body>
+
+</html>

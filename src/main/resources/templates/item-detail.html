@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html xmlns:th="http://thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<title>My Lolita Closet - お洋服詳細</title>
+	<style>
+		body {
+			font-family: 'Meiryo UI', sans-serif;
+			margin: 40px;
+			background-color: #fcfcfc;
+			color: #333;
+		}
+
+		h1 {
+			border-bottom: 2px solid #1f497d;
+			padding-bottom: 10px;
+			color: #1f497d;
+			margin-bottom: 20px;
+		}
+
+		/* 🧱 あなたが作ったブロックデザインを100%そのまま維持します */
+		.category-block {
+			background: white;
+			border: 1px solid #ddd;
+			border-radius: 8px;
+			padding: 25px;
+			margin-bottom: 25px;
+			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+		}
+
+		/* ボタン専用の背景付きコンテナブロック */
+		.action-container-block {
+			background: #f0f4f8;
+			border: 1px solid #ddd;
+			border-radius: 8px;
+			padding: 15px 25px;
+			margin-bottom: 25px;
+			display: flex;
+			gap: 15px;
+			align-items: center;
+			justify-content: flex-start;
+			box-sizing: border-box;
+		}
+
+		.block-title {
+			font-size: 16px;
+			font-weight: bold;
+			color: #1f497d;
+			border-left: 4px solid #1f497d;
+			padding-left: 10px;
+			margin-bottom: 20px;
+		}
+
+		/* 🌸 登録画面と全く同じ2列横並びの構造 */
+		.form-grid {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 20px;
+		}
+
+		.form-group {
+			width: calc(50% - 10px);
+			min-width: 300px;
+		}
+
+		label {
+			display: block;
+			font-weight: bold;
+			margin-bottom: 6px;
+			color: #555;
+		}
+
+		/* 詳細画面の固定テキスト表示用 */
+		.detail-value {
+			padding: 10px 0;
+			font-size: 14px;
+		}
+
+		.value-bold {
+			font-weight: bold;
+		}
+
+		/* 各ボタン装飾 */
+		.btn-submit-like {
+			display: inline-block;
+			background-color: #1f497d;
+			color: white;
+			padding: 10px 20px;
+			border-radius: 4px;
+			text-decoration: none;
+			font-size: 14px;
+			font-weight: bold;
+		}
+
+		.btn-delete-like {
+			display: inline-block;
+			background-color: #d9534f;
+			color: white;
+			padding: 10px 20px;
+			border-radius: 4px;
+			text-decoration: none;
+			font-size: 14px;
+			font-weight: bold;
+		}
+
+		.btn-ai-like {
+			display: inline-block;
+			background-color: #e0cfeb;
+			color: #1f497d;
+			padding: 10px 20px;
+			border-radius: 4px;
+			text-decoration: none;
+			font-size: 14px;
+			font-weight: bold;
+			border: 1px solid #1f497d;
+		}
+
+		.btn-back-link {
+			display: inline-flex;
+			align-items: center;
+			color: #555;
+			text-decoration: none;
+			font-size: 14px;
+			margin-bottom: 20px;
+		}
+
+		.btn-back-link:hover {
+			color: #1f497d;
+			text-decoration: underline;
+		}
+
+		.thumb-img {
+			transition: all 0.2s;
+		}
+
+		.thumb-img.active {
+			border-color: #1f497d !important;
+			box-shadow: 0 0 5px rgba(31, 73, 125, 0.5);
+		}
+	</style>
+</head>
+
+<body>
+	<!-- 🏰 共通ウェルカムヘッダーの自動大合流 -->
+	<div th:replace="~{common/header :: welcomeHeader}"></div>
+
+	<h1 style="margin-top: 20px;">🔍 お洋服の詳細情報</h1>
+
+	<!-- 【上段】一覧戻るリンク -->
+	<div>
+		<a th:href="@{/items}" class="btn-back-link">⬅ クローゼット一覧に戻る</a>
+	</div>
+
+	<!-- 🪟 左右並びのメインレイアウト -->
+	<div style="display: flex; gap: 40px; align-items: flex-start;">
+
+		<!-- 👗 左側：お写真エリア（横幅460px / 画像440x580の大きいサイズを維持） -->
+		<div style="width: 460px; flex-shrink: 0; text-align: center;">
+			<div class="mx-auto mb-3 d-flex justify-content-center align-items-center"
+				style="width: 440px; height: 580px; overflow: hidden;">
+				<img id="mainImage"
+					th:src="${item.images != null && !item.images.isEmpty()} ? '/uploads/' + ${item.images[0].imagePath} : '/images/no-image.png'"
+					alt="商品画像" style="width: 100%; height: 100%; object-fit: contain; display: block;">
+			</div>
+
+			<!-- 🌸【カルーゼルバグ完全消滅】Thymeleafの変数式をプレーンで最も安全なURL式に修復しました！ -->
+			<div th:if="${item.images != null && item.images.size() > 1}"
+				style="display: flex; justify-content: center; align-items: center; margin-top: 15px; margin-bottom: 15px;">
+				<div style="display: flex; align-items: center; gap: 15px;">
+					<span id="prevBtn" onclick="slideImage(-1)"
+						style="font-size: 1.8rem; font-weight: bold; color: #333; cursor: pointer; user-select: none; padding: 0 5px; display: inline-block; line-height: 1;">&lt;</span>
+					<div style="display: flex; gap: 8px; align-items: center;">
+						<!-- 🌸 ここを公式の安全なURL展開式に変更し、2枚目以降を100%確実に呼び出します！ -->
+						<img th:each="img, stat : ${item.images}" th:src="@{/uploads/{path}(path=${img.imagePath})}"
+							th:classappend="${stat.index == 0} ? 'active' : ''" class="thumb-img"
+							th:data-index="${stat.index}"
+							style="width: 70px; height: 70px; object-fit: cover; cursor: pointer; border: 2px solid transparent; border-radius: 4px; display: block;"
+							onclick="clickThumbnail(this)">
+					</div>
+					<span id="nextBtn" onclick="slideImage(1)"
+						style="font-size: 1.8rem; font-weight: bold; color: #333; cursor: pointer; user-select: none; padding: 0 5px; display: inline-block; line-height: 1;">&gt;</span>
+				</div>
+			</div>
+		</div>
+
+		<!-- 🏰 右側：情報 ＆ ボタン表示エリア -->
+		<div style="flex: 1;">
+
+			<!-- 上段ボタンブロック（AIに相談ボタンを、チャットルームへの遷移リンクに変身させました！） -->
+			<div class="action-container-block">
+				<a th:href="@{/items/edit/{id}(id=${item.itemId})}" class="btn-submit-like">✏️ 編集する</a>
+				<a th:href="@{/items/delete/{id}(id=${item.itemId})}" onclick="return confirm('本当に削除しますか？');"
+					class="btn-delete-like">🗑️ 削除する</a>
+				<a th:href="@{/items/{id}/ai-room(id=${item.itemId})}" class="btn-ai-like">✨ AIに相談</a>
+			</div>
+			<!-- 👗 ブロック①：ブランドやシリーズなどの「お服の情報」 -->
+			<div class="category-block">
+				<div class="block-title">🏰 お洋服の基本情報</div>
+				<div class="form-grid">
+
+					<!-- 商品名 -->
+					<div class="form-group">
+						<label>商品名</label>
+						<div class="detail-value" th:text="${item.itemName}"></div>
+					</div>
+
+					<!-- ブランド -->
+					<div class="form-group">
+						<label>ブランド</label>
+						<div class="detail-value" th:text="${item.brand != null} ? ${item.brand.brandName} : '未設定'">
+						</div>
+					</div>
+
+					<!-- カラー系統 -->
+					<div class="form-group">
+						<label>カラー系統</label>
+						<div class="detail-value" id="displayColor">読み込み中...</div>
+					</div>
+
+					<!-- カテゴリ -->
+					<div class="form-group">
+						<label>カテゴリ</label>
+						<div class="detail-value" id="displayCategory">読み込み中...</div>
+					</div>
+
+					<!-- 正式カラー名 -->
+					<div class="form-group" th:if="${item.formalColorName != null && !item.formalColorName.isEmpty()}">
+						<label>正式カラー名（ブランド表記）</label>
+						<div class="detail-value" th:text="${item.formalColorName}"></div>
+					</div>
+
+					<!-- シリーズ（柄名） -->
+					<div class="form-group" th:if="${item.seriesId != null && item.seriesId > 0}" id="seriesGroup"
+						style="display: none;">
+						<label>シリーズ（柄名）</label>
+						<div class="detail-value" id="displaySeries"></div>
+					</div>
+
+				</div>
+			</div>
+
+			<!-- 📏 ブロック②：サイズなどの「基本情報・寸法まわり」 -->
+			<div class="category-block"
+				th:if="${(item.sizeName != null && !item.sizeName.isEmpty()) || (item.lengthCm != null && item.lengthCm > 0) || (item.bustCm != null && item.bustCm > 0) || (item.waistCm != null && item.waistCm > 0)}">
+				<div class="block-title">📏 サイズ・寸法情報</div>
+				<div class="form-grid">
+
+					<!-- サイズ -->
+					<div class="form-group" th:if="${item.sizeName != null && !item.sizeName.isEmpty()}">
+						<label>サイズ</label>
+						<div class="detail-value" th:text="${item.sizeName}"></div>
+					</div>
+
+					<!-- 各数値表示 -->
+					<div class="form-group" th:if="${item.lengthCm != null && item.lengthCm > 0}">
+						<label>着丈</label>
+						<div class="detail-value"><span th:text="${item.lengthCm}"></span> cm</div>
+					</div>
+
+					<div class="form-group" th:if="${item.bustCm != null && item.bustCm > 0}">
+						<label>バスト（対応サイズ）</label>
+						<div class="detail-value"><span th:text="${item.bustCm}"></span> cm</div>
+					</div>
+
+					<div class="form-group" th:if="${item.waistCm != null && item.waistCm > 0}">
+						<label>ウエスト（対応サイズ）</label>
+						<div class="detail-value"><span th:text="${item.waistCm}"></span> cm</div>
+					</div>
+
+				</div>
+			</div>
+
+			<!-- 💰 ブロック③：お迎え価格や経路などの「購入に関するもの」 -->
+			<div class="category-block">
+				<div class="block-title">💰 購入・お迎え情報</div>
+				<div class="form-grid">
+
+					<!-- 購入状態 -->
+					<div class="form-group" th:if="${item.statusCode != null}">
+						<label>購入状態</label>
+						<div class="detail-value" th:text="${item.statusCode == 1} ? '✨ 新品' : '🧸 中古'"></div>
+					</div>
+
+					<!-- 購入経路 -->
+					<div class="form-group" th:if="${item.purchaseRouteId != null && item.purchaseRouteId > 0}"
+						id="routeGroup" style="display: none;">
+						<label>購入経路</label>
+						<div class="detail-value" id="displayRoute"></div>
+					</div>
+
+					<!-- 購入価格 -->
+					<div class="form-group">
+						<label>購入価格</label>
+						<div class="detail-value"
+							th:text="${#numbers.formatInteger(item.purchasePrice, 1, 'COMMA')} + ' 円'"></div>
+					</div>
+
+					<!-- 参考定価 -->
+					<div class="form-group" th:if="${item.listPrice != null && item.listPrice > 0}">
+						<label>参考定価</label>
+						<div class="detail-value"
+							th:text="${#numbers.formatInteger(item.listPrice, 1, 'COMMA')} + ' 円'"></div>
+					</div>
+
+					<!-- お迎え日 -->
+					<div class="form-group" th:if="${item.purchaseDate != null}">
+						<label>お迎え日（購入日）</label>
+						<div class="detail-value" th:text="${#temporals.format(item.purchaseDate, 'yyyy年MM月dd日')}">
+						</div>
+					</div>
+
+					<!-- クローゼットメモ -->
+					<div class="form-group" th:if="${item.memo != null && !item.memo.isEmpty()}" style="width: 100%;">
+						<label>クローゼットメモ（コーデ案や状態など）</label>
+						<div class="detail-value"
+							style="background: #f9f9f9; padding: 15px; border-radius: 4px; max-width: 820px; white-space: pre-wrap; line-height: 1.6;"
+							th:text="${item.memo}"></div>
+					</div>
+
+				</div>
+			</div>
+
+			<!-- 下段ボタンブロック -->
+			<div class="action-container-block" style="margin-top: 30px; margin-bottom: 0;">
+				<a th:href="@{/items/edit/{id}(id=${item.itemId})}" class="btn-submit-like">✏️ 編集する</a>
+				<a th:href="@{/items/delete/{id}(id=${item.itemId})}" onclick="return confirm('本当に削除しますか？');"
+					class="btn-delete-like">🗑️ 削除する</a>
+				<a th:href="@{/items/{id}/ai-room(id=${item.itemId})}" class="btn-ai-like">✨ AIに相談</a>
+			</div>
+
+		</div>
+	</div>
+
+	<!-- 【下段】一覧に戻るリンク -->
+	<div style="margin-top: 25px;">
+		<a th:href="@{/items}" class="btn-back-link">⬅ クローゼット一覧に戻る</a>
+	</div>
+
+	<!-- 🌟 IDからマスタの日本語名を逆引きマッピングするJavaScript処理 -->
+	<script th:inline="javascript">
+		/*<![CDATA[*/
+		const allRoutes = /*[[${purchaseRoutes}]]*/[];
+		const allSeries = /*[[${seriesList}]]*/[];
+		const allColors = /*[[${colors}]]*/[];
+		const allSubCategories = /*[[${subCategories}]]*/[];
+		const allMainCategories = /*[[${mainCategories}]]*/[];
+
+		const currentSubCategoryId = /*[[${item.subCategoryId}]]*/ null;
+		const currentColorId = /*[[${item.colorId}]]*/ null;
+		const currentSeriesId = /*[[${item.seriesId}]]*/ null;
+		const currentRouteId = /*[[${item.purchaseRouteId}]]*/ null;
+		/*]]>*/
+
+		window.addEventListener('DOMContentLoaded', () => {
+			// 1. カテゴリのマッピング
+			if (currentSubCategoryId && allSubCategories) {
+				const sub = allSubCategories.find(sc => sc.subCategoryId == currentSubCategoryId);
+				if (sub) {
+					const main = allMainCategories ? allMainCategories.find(mc => mc.mainCategoryId == sub.mainCategoryId) : null;
+					const mainName = main ? main.mainCategoryName : '';
+					document.getElementById("displayCategory").innerText = mainName + " > " + sub.subCategoryName;
+				} else {
+					document.getElementById("displayCategory").innerText = "未設定";
+				}
+			} else {
+				document.getElementById("displayCategory").innerText = "未設定";
+			}
+
+			// 2. カラー系統のマッピング
+			if (currentColorId && allColors) {
+				const color = allColors.find(c => c.colorId == currentColorId);
+				document.getElementById("displayColor").innerText = color ? color.colorName : "未設定";
+			} else {
+				document.getElementById("displayColor").innerText = "未設定";
+			}
+
+			// 3. シリーズのマッピング
+			if (currentSeriesId && allSeries) {
+				const series = allSeries.find(s => s.seriesId == currentSeriesId);
+				if (series) {
+					document.getElementById("displaySeries").innerText = series.seriesName;
+					document.getElementById("seriesGroup").style.display = "block";
+				}
+			}
+
+			// 4. 購入経路のマッピング
+			if (currentRouteId && allRoutes) {
+				const route = allRoutes.find(r => r.purchaseRouteId == currentRouteId);
+				if (route) {
+					document.getElementById("displayRoute").innerText = route.routeName;
+					document.getElementById("routeGroup").style.display = "block";
+				}
+			}
+		});
+
+		// 📸 カルーゼル（画像切り替え）制御ロジック
+		let currentIndex = 0;
+
+		function getThumbnails() {
+			return document.querySelectorAll('.thumb-img');
+		}
+
+		function clickThumbnail(element) {
+			currentIndex = parseInt(element.getAttribute('data-index'), 10);
+			updateDisplay();
+		}
+
+		function slideImage(direction) {
+			const thumbs = getThumbnails();
+			if (thumbs.length === 0) return;
+
+			currentIndex += direction;
+			if (currentIndex < 0) {
+				currentIndex = thumbs.length - 1;
+			} else if (currentIndex >= thumbs.length) {
+				currentIndex = 0;
+			}
+			updateDisplay();
+		}
+
+		function updateDisplay() {
+			const thumbs = getThumbnails();
+			if (thumbs.length === 0) return;
+
+			const targetThumb = thumbs[currentIndex];
+			document.getElementById('mainImage').src = targetThumb.src;
+
+			thumbs.forEach(img => img.classList.remove('active'));
+			targetThumb.classList.add('active');
+
+			targetThumb.scrollIntoView({behavior: 'smooth', block: 'nearest', inline: 'center'});
+		}
+	</script>
+</body>
+
+</html>

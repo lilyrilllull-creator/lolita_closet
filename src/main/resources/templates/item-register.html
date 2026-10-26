@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html xmlns:th="http://thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<title th:text="${item.itemId != null} ? 'My Lolita Closet - お洋服の編集' : 'My Lolita Closet - お洋服登録'"></title>
+	<style>
+		body {
+			font-family: 'Meiryo UI', sans-serif;
+			margin: 40px;
+			background-color: #fcfcfc;
+			color: #333;
+		}
+
+		h1 {
+			border-bottom: 2px solid #1f497d;
+			padding-bottom: 10px;
+			color: #1f497d;
+		}
+
+		/* 🧱 カテゴリごとに固めるブロックデザイン */
+		.category-block {
+			background: white;
+			border: 1px solid #ddd;
+			border-radius: 8px;
+			padding: 25px;
+			margin-bottom: 25px;
+			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+		}
+
+		.block-title {
+			font-size: 16px;
+			font-weight: bold;
+			color: #1f497d;
+			border-left: 4px solid #1f497d;
+			padding-left: 10px;
+			margin-bottom: 20px;
+		}
+
+		.form-grid {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 20px;
+		}
+
+		.form-group {
+			width: calc(50% - 10px);
+			min-width: 300px;
+		}
+
+		label {
+			display: block;
+			font-weight: bold;
+			margin-bottom: 6px;
+			color: #555;
+		}
+
+		input[type="text"],
+		input[type="number"],
+		input[type="date"],
+		select,
+		textarea {
+			width: 100%;
+			max-width: 400px;
+			padding: 10px;
+			border: 1px solid #ccc;
+			border-radius: 4px;
+			box-sizing: border-box;
+			font-size: 14px;
+		}
+
+		textarea {
+			max-width: 820px;
+			height: 100px;
+			resize: vertical;
+		}
+
+		.unit-input {
+			display: flex;
+			align-items: center;
+			max-width: 400px;
+		}
+
+		.unit-input input {
+			flex: 1;
+		}
+
+		.unit {
+			margin-left: 10px;
+			font-weight: bold;
+			color: #666;
+			width: 40px;
+		}
+
+		.required-badge {
+			color: red;
+			margin-left: 4px;
+		}
+
+		/* 🌸 カンマで並べることで、シリーズ用とサイズ用、両方の初期非表示ルールを同時に適用します！ */
+		.new-input-area,
+		.new-size-area {
+			display: none;
+			margin-top: 10px;
+			border-left: 3px solid #1f497d;
+			padding-left: 15px;
+		}
+
+
+		/* 📻 丸ポチを消したお洒落な2連トグルボタン */
+		.status-toggle input[type="radio"] {
+			display: none;
+		}
+
+		.status-button-group {
+			display: flex;
+			max-width: 400px;
+			border: 1px solid #1f497d;
+			border-radius: 4px;
+			overflow: hidden;
+		}
+
+		.status-label {
+			flex: 1;
+			text-align: center;
+			padding: 10px 0;
+			background: white;
+			color: #1f497d;
+			font-weight: bold;
+			cursor: pointer;
+			transition: all 0.2s;
+			margin-bottom: 0;
+		}
+
+		.status-label:hover {
+			background: #f0f4f8;
+		}
+
+		.status-toggle input[type="radio"]:checked+.status-label {
+			background: #1f497d;
+			color: white;
+		}
+
+		#statusNew+.status-label {
+			border-right: 1px solid #1f497d;
+		}
+
+		/* 📸 サムネイルを並べるコンテナ（横並びで折り返し） */
+		.thumbnail-container {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 10px;
+			margin-top: 12px;
+		}
+
+		/* 🎀 サムネイル1枚分の丸角カード */
+		.thumbnail-wrapper {
+			width: 80px;
+			height: 80px;
+			border-radius: 6px;
+			overflow: hidden;
+			border: 1px solid #ddd;
+			position: relative;
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+		}
+
+		/* 中のお写真（枠いっぱいに綺麗に収める） */
+		.thumbnail-img {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+		}
+	</style>
+</head>
+
+<body>
+
+	<h1 th:text="${item.itemId != null} ? '✏️ お洋服の情報の編集' : '➕ 新しいお洋服の登録'">➕ 新しいお洋服の登録</h1>
+
+	<!-- 📷 画像ファイルなどの重たいデータを裏側で安全に送信する規格（enctype）を指定します -->
+	<!-- 📷 古いゴミをすべて消去し、この綺麗な1行だけにすっきりと直します！ -->
+	<form th:action="${item.itemId != null} ? @{/items/edit/{id}(id=${item.itemId})} : @{/items/register}"
+		th:object="${item}" method="post" enctype="multipart/form-data">
+
+		<!-- 👗 ブロック①：ブランドやシリーズなどの「お服の情報」 -->
+		<div class="category-block">
+			<div class="block-title">🏰 お洋服の基本情報</div>
+			<div class="form-grid">
+
+				<!-- 商品名 -->
+				<div class="form-group">
+					<label for="itemName">商品名<span class="required-badge">*</span></label>
+					<input type="text" th:field="*{itemName}" required placeholder="例：Sugary Carnival JSK">
+				</div>
+
+				<!-- ブランド選択 -->
+				<div class="form-group">
+					<label for="brandSelect">ブランド<span class="required-badge">*</span></label>
+					<select th:field="*{brandId}" id="brandSelect" onchange="handleBrandChange()" required>
+						<option value="">-- ブランドを選択してください --</option>
+						<option th:each="b : ${brands}" th:value="${b.brandId}" th:text="${b.brandName}"></option>
+					</select>
+				</div>
+
+				<!-- カラー系統 -->
+				<div class="form-group">
+					<label for="colorId">カラー系統（グラフ集計用）<span class="required-badge">*</span></label>
+					<select th:field="*{colorId}" required>
+						<option value="">-- カラー系統を選択してください --</option>
+						<option th:each="c : ${colors}" th:value="${c.colorId}" th:text="${c.colorName}"></option>
+					</select>
+				</div>
+
+				<!-- 基本カテゴリ（大分類） -->
+				<div class="form-group">
+					<label for="mainCategorySelect">基本カテゴリ（大分類）<span class="required-badge">*</span></label>
+					<select id="mainCategorySelect" onchange="updateSubCategories()" required>
+						<option value="">-- 大分類を選択してください --</option>
+						<option th:each="mc : ${mainCategories}" th:value="${mc.mainCategoryId}"
+							th:text="${mc.mainCategoryName}"></option>
+					</select>
+				</div>
+
+				<!-- 正式カラー名 -->
+				<div class="form-group">
+					<label for="formalColorName">正式カラー名（ブランド表記）</label>
+					<input type="text" th:field="*{formalColorName}" placeholder="例：シフォンピンク×白レース">
+				</div>
+
+				<!-- 詳細カテゴリ（小分類） -->
+				<div class="form-group">
+					<label for="subCategorySelect">詳細カテゴリ（小分類）<span class="required-badge">*</span></label>
+					<select th:field="*{subCategoryId}" id="subCategorySelect" required disabled>
+						<option value="">-- 先に大分類を選択してください --</option>
+					</select>
+				</div>
+
+				<!-- 👈 左側：シリーズ（柄名） -->
+				<div class="form-group">
+					<label for="seriesSelect">シリーズ（柄名）</label>
+					<select id="seriesSelect" onchange="checkNewSeries()" disabled>
+						<option value="">-- 先にブランドを選択してください --</option>
+					</select>
+					<input type="hidden" th:field="*{seriesId}" id="seriesIdHidden">
+					<div id="newSeriesArea" class="new-input-area">
+						<label for="newSeriesName" style="color:#1f497d; font-size:13px;">🆕 新しいシリーズ名を入力してください</label>
+						<input type="text" id="newSeriesName" name="newSeriesName" placeholder="例：Sugary Carnival">
+					</div>
+				</div>
+
+				<!-- 👉 右側：お写真アップロードボタン（複数対応・プレビュー連動） -->
+				<div class="form-group">
+					<label for="imageFile">📸 お洋服の写真（本物の画像を添付）</label>
+					<input type="file" id="imageFile" name="imageFile" accept="image/*" multiple
+						onchange="previewImages()">
+					<div id="thumbnailContainer" class="thumbnail-container"></div>
+					<small style="color: #666; display: block; margin-top: 5px;">※スマホから開くとカメラを起動できます</small>
+				</div>
+
+				<!-- 🏰 現在登録されているお写真の管理（タグの開閉階層を100%完璧に修復しました！） -->
+				<div th:if="${itemImages != null and not #lists.isEmpty(itemImages)}"
+					style="margin-top: 25px; background: #fff0f5; border: 1px dashed #d15184; border-radius: 8px; padding: 15px; text-align: left; width: 100%;">
+					<div
+						style="font-size: 13px; font-weight: bold; color: #d15184; margin-bottom: 12px; display: flex; align-items: center; gap: 5px;">
+						Castle 現在登録されているお写真の管理
+					</div>
+
+					<div style="display: flex; flex-wrap: wrap; gap: 15px;">
+						<div th:each="img : ${itemImages}"
+							style="width: 100px; background: white; border: 1px solid #ddd; border-radius: 6px; padding: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 8px;">
+
+							<div
+								style="width: 84px; height: 110px; border-radius: 4px; overflow: hidden; border: 1px solid #eee; margin: 0 auto;">
+								<img th:src="@{/uploads/{path}(path=${img.imagePath})}"
+									style="width: 100%; height: 100%; object-fit: cover;" alt="クローゼットの写真">
+							</div>
+
+							<label
+								style="font-size: 11px; margin: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 3px; font-weight: bold; color: #1f497d;">
+								<input type="radio" name="mainImageId" th:value="${img.imageId}"
+									th:checked="${img.isMain}">
+								<span>主役</span>
+							</label>
+
+							<label
+								style="font-size: 11px; margin: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 3px; font-weight: bold; color: #d9534f;">
+								<input type="checkbox" name="deleteImageIds" th:value="${img.imageId}">
+								<span>削除</span>
+							</label>
+						</div>
+					</div>
+					<small
+						style="color: #666; display: block; margin-top: 10px; line-height: 1.4;">※「主役」に選んだ写真が、一覧画面やダッシュボードの顔になります。不要な写真に「削除」を入れて保存すると、クローゼットから完全に消去されますわ。🌹</small>
+				</div>
+
+			</div> <!-- 🌸 form-gridの適切な閉じです -->
+		</div> <!-- 🌸 category-block（基本情報）の適切な閉じです。余分な div は一切排除しました！ -->
+
+		<!-- 📏 ブロック②：サイズなどの「基本情報・寸法まわり」 -->
+		<div class="category-block">
+			<div class="block-title">📏 サイズ・寸法情報</div>
+			<div class="form-grid">
+
+				<!-- 👈 左列：サイズ選択（プルダウン＆手入力連動） -->
+				<div class="form-group" style="flex: 1; min-width: 300px;">
+					<label for="sizeSelect">サイズ</label>
+					<select id="sizeSelect" onchange="checkNewSize()">
+						<option value="">-- サイズを選択してください --</option>
+						<option value="S">S</option>
+						<option value="M">M</option>
+						<option value="L">L</option>
+						<option value="XL">XL</option>
+						<option value="フリー">フリー（F）</option>
+						<option value="OTHER">その他（手入力）...</option>
+					</select>
+					<input type="hidden" th:field="*{sizeName}" id="sizeNameHidden">
+
+					<!-- 💡【ここが重要！】JavaScriptが探せるように、ID付きのこの囲み枠をプルダウンの直下に正しく配置しました -->
+					<div id="newSizeArea" class="new-size-area">
+						<label for="customSizeInput" style="color:#1f497d; font-size:13px;">🆕 正しいサイズ表記を入力してください</label>
+						<input type="text" id="customSizeInput" placeholder="例：LL、1サイズなど" oninput="syncCustomSize()">
+					</div>
+				</div>
+
+				<!-- 👉 右列：各数値入力（縦に綺麗に並べるための専用ボックス） -->
+				<div class="form-group"
+					style="flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 15px;">
+					<!-- 着丈 -->
+					<div>
+						<label for="lengthCm">着丈（スペック）</label>
+						<div class="unit-input">
+							<input type="number" th:field="*{lengthCm}" min="0" max="255" placeholder="例：92">
+							<span class="unit">cm</span>
+						</div>
+					</div>
+					<!-- バスト -->
+					<div>
+						<label for="bustCm">バスト（対応サイズ）</label>
+						<div class="unit-input">
+							<input type="number" th:field="*{bustCm}" min="0" max="255" placeholder="例：89">
+							<span class="unit">cm</span>
+						</div>
+					</div>
+					<!-- ウエスト -->
+					<div>
+						<label for="waistCm">ウエスト（対応サイズ）</label>
+						<div class="unit-input">
+							<input type="number" th:field="*{waistCm}" min="0" max="255" placeholder="例：70">
+							<span class="unit">cm</span>
+						</div>
+					</div>
+				</div>
+
+			</div>
+		</div>
+
+		<!-- 💰 ブロック③：お迎え価格や経路などの「購入に関するもの」 -->
+		<div class="category-block">
+			<div class="block-title">💰 購入・お迎え情報</div>
+			<div class="form-grid">
+				<div class="form-group">
+					<label>購入状態</label>
+					<div class="status-button-group">
+						<div class="status-toggle" style="flex: 1; display: flex;">
+							<input type="radio" id="statusNew" th:field="*{statusCode}" value="1" checked>
+							<label for="statusNew" class="status-label">✨ 新品</label>
+						</div>
+						<div class="status-toggle" style="flex: 1; display: flex;">
+							<input type="radio" id="statusUsed" th:field="*{statusCode}" value="2">
+							<label for="statusUsed" class="status-label">🧸 中古</label>
+						</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="routeSelect">購入経路</label>
+					<select th:field="*{purchaseRouteId}" id="routeSelect" disabled>
+						<option value="">-- 先にブランドを選択してください --</option>
+					</select>
+				</div>
+				<div class="form-group">
+					<label for="purchasePrice">購入価格<span class="required-badge">*</span></label>
+					<div class="unit-input">
+						<input type="number" th:field="*{purchasePrice}" required min="0" placeholder="例：32000">
+						<span class="unit">円</span>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="listPrice">参考定価</label>
+					<div class="unit-input">
+						<input type="number" th:field="*{listPrice}" min="0" placeholder="例：34800">
+						<span class="unit">円</span>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="purchaseDate">お迎え日（購入日）</label>
+					<input type="date" th:field="*{purchaseDate}">
+				</div>
+				<div class="form-group" style="width: 100%;">
+					<label for="memo">クローゼットメモ（コーデ案や状態など）</label>
+					<textarea th:field="*{memo}" placeholder="例：胸元リボン取り外し可能。パニエ2枚重ねがおすすめ！"></textarea>
+				</div>
+			</div>
+		</div>
+
+		<!-- ボタンエリア -->
+		<div style="margin-top: 30px; padding-top: 20px;">
+			<button type="submit" class="btn-submit">💾 この内容でクローゼットに登録する</button>
+			<a th:href="@{/items}" class="btn-back">❌ キャンセル（一覧に戻る）</a>
+		</div>
+	</form>
+
+	<!-- 🌟 【今度こそ完全解決・ゴミ文字100%完全清掃版】ドットやバックスラッシュを全消去しました！ -->
+	<script th:inline="javascript">
+		/*<![CDATA[*/
+		const allRoutes = /*[[${purchaseRoutes}]]*/[];
+		const allSeries = /*[[${seriesList}]]*/[];
+		const allSubCategories = /*[[${subCategories}]]*/[];
+		const allMainCategories = /*[[${mainCategories}]]*/[];
+		/*]]>*/
+
+		// 新規登録時に未定義エラーでJSがフリーズするのを防ぐ安全弁
+		window.currentMainImageId = null;
+		window.currentDeleteImageIds = [];
+
+		function handleBrandChange() {
+			const bId = document.getElementById("brandSelect").value;
+			const rSel = document.getElementById("routeSelect");
+			const sSel = document.getElementById("seriesSelect");
+			if (!bId) {
+				rSel.innerHTML = '<option value="">-- 先にブランドを選択してください --</option>'; rSel.disabled = true;
+				sSel.innerHTML = '<option value="">-- 先にブランドを選択してください --</option>'; sSel.disabled = true;
+				return;
+			}
+			rSel.innerHTML = '<option value="">-- 購入経路を選択してください（空欄可） --</option>';
+			allRoutes.filter(r => r.isCommon || r.brandId == bId).forEach(r => {
+				rSel.innerHTML += `<option value="${r.purchaseRouteId}">${r.routeName}</option>`;
+			});
+			rSel.disabled = false;
+
+			sSel.innerHTML = '<option value="">-- シリーズなし（空欄保存） --</option>';
+			allSeries.filter(s => s.brandId == bId).forEach(s => {
+				sSel.innerHTML += `<option value="${s.seriesId}">${s.seriesName}</option>`;
+			});
+			sSel.innerHTML += '<option value="NEW">➕ 新しいシリーズ（柄名）を追加する...</option>';
+			sSel.disabled = false;
+			checkNewSeries();
+		}
+
+		function checkNewSeries() {
+			const s = document.getElementById("seriesSelect");
+			const a = document.getElementById("newSeriesArea");
+			const h = document.getElementById("seriesIdHidden");
+			if (s.value === "NEW") {a.style.display = "block"; document.getElementById("newSeriesName").required = true; h.value = "";}
+			else {a.style.display = "none"; document.getElementById("newSeriesName").required = false; h.value = s.value;}
+		}
+		function checkNewSize() {
+			const select = document.getElementById("sizeSelect");
+			const area = document.getElementById("newSizeArea");
+			const customInput = document.getElementById("customSizeInput");
+			const hiddenInput = document.getElementById("sizeNameHidden");
+
+			if (!select || !area || !customInput || !hiddenInput) return;
+
+			if (select.value === "OTHER") {
+				area.style.display = "block";
+				customInput.required = true;
+				hiddenInput.value = customInput.value;
+			} else {
+				area.style.display = "none";
+				customInput.required = false;
+				customInput.value = "";
+				hiddenInput.value = select.value;
+			}
+		}
+
+		function syncCustomSize() {document.getElementById("sizeNameHidden").value = document.getElementById("customSizeInput").value;}
+
+		function updateSubCategories() {
+			const mId = document.getElementById("mainCategorySelect").value;
+			const sSel = document.getElementById("subCategorySelect");
+			sSel.innerHTML = '<option value="">-- 詳細を選択してください --</option>';
+			if (!mId) {sSel.disabled = true; return;}
+			allSubCategories.filter(sc => sc.mainCategoryId == mId).forEach(sc => {
+				sSel.innerHTML += `<option value="${sc.subCategoryId}">${sc.subCategoryName}</option>`;
+			});
+			sSel.disabled = false;
+		}
+
+		function previewImages() {
+			const container = document.getElementById("thumbnailContainer");
+			const fileInput = document.getElementById("imageFile");
+			container.innerHTML = "";
+			if (fileInput.files) {
+				Array.from(fileInput.files).forEach(file => {
+					const reader = new FileReader();
+					reader.onload = function (e) {
+						const wrapper = document.createElement("div"); wrapper.className = "thumbnail-wrapper";
+						const img = document.createElement("img"); img.className = "thumbnail-img"; img.src = e.target.result;
+						wrapper.appendChild(img); container.appendChild(wrapper);
+					};
+					reader.readAsDataURL(file);
+				});
+			}
+		}
+
+		// 📝 登録・編集時の完全なる初期データ引き継ぎと自動復元ロジック
+		window.addEventListener('DOMContentLoaded', () => {
+			const sName = document.getElementById("sizeNameHidden").value;
+			const sSel = document.getElementById("sizeSelect");
+			if (sName && sSel) {
+				let m = false;
+				for (let i = 0; i < sSel.options.length; i++) {
+					if (sSel.options[i].value === sName) {sSel.selectedIndex = i; m = true; break;}
+				}
+				if (!m && sSel.value === "OTHER") {checkNewSize(); document.getElementById("customSizeInput").value = sName;}
+			}
+
+			// 🌸 編集時：保存されているカテゴリIDからプルダウンを自動復元する
+			const savedSubId = /*[[${item.subCategoryId}]]*/ null;
+			if (savedSubId && allSubCategories) {
+				const matchedSub = allSubCategories.find(sc => sc.subCategoryId == savedSubId);
+				if (matchedSub) {
+					document.getElementById("mainCategorySelect").value = matchedSub.mainCategoryId;
+					updateSubCategories();
+					document.getElementById("subCategorySelect").value = savedSubId;
+				}
+			}
+
+			// 🌸 編集時：ブランド連動を復元
+			if (document.getElementById("brandSelect").value) {
+				handleBrandChange();
+				const savedRouteId = /*[[${item.purchaseRouteId}]]*/ null;
+				const savedSeriesId = /*[[${item.seriesId}]]*/ null;
+				if (savedRouteId) document.getElementById("routeSelect").value = savedRouteId;
+				if (savedSeriesId) document.getElementById("seriesSelect").value = savedSeriesId;
+			}
+		});
+	</script>
+</body>
+
+</html>

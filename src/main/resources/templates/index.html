@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html xmlns:th="http://thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<title>My Lolita Closet - ホーム</title>
+
+	<!-- 🌸 Chart.jsの軽量公式スクリプトを読み込みます -->
+	<!-- 🌸 【修正箇所】途切れていたURLを正しい Chart.js の配信パスに直しました！ -->
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+	<style>
+		body {
+			font-family: 'Meiryo UI', sans-serif;
+			margin: 40px;
+			background-color: #fcfcfc;
+			color: #333;
+		}
+
+		h1 {
+			border-bottom: 2px solid #1f497d;
+			padding-bottom: 10px;
+			color: #1f497d;
+		}
+
+		.category-block {
+			background: white;
+			border: 1px solid #ddd;
+			border-radius: 8px;
+			padding: 25px;
+			margin-bottom: 25px;
+			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+		}
+
+		.block-title {
+			font-size: 16px;
+			font-weight: bold;
+			color: #1f497d;
+			border-left: 4px solid #1f497d;
+			padding-left: 10px;
+			margin-bottom: 20px;
+		}
+
+		.form-grid {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 20px;
+		}
+
+		.graph-grid {
+			display: flex;
+			gap: 20px;
+			margin-top: 15px;
+		}
+
+		.graph-box {
+			flex: 1;
+			background: #fafafa;
+			border: 1px solid #eee;
+			border-radius: 6px;
+			padding: 15px;
+			box-sizing: border-box;
+			min-width: 260px;
+			text-align: center;
+		}
+
+		.graph-title {
+			font-size: 13px;
+			font-weight: bold;
+			color: #555;
+			margin-bottom: 10px;
+		}
+
+		.stat-box {
+			background: #f0f4f8;
+			border: 1px solid #ddd;
+			border-radius: 6px;
+			padding: 15px 25px;
+			display: inline-flex;
+			align-items: center;
+			gap: 15px;
+			margin-bottom: 10px;
+		}
+
+		.stat-number {
+			font-size: 28px;
+			font-weight: bold;
+			color: #1f497d;
+		}
+
+		.menu-card {
+			background: white;
+			border: 1px solid #eee;
+			border-radius: 6px;
+			padding: 20px;
+			text-align: center;
+			text-decoration: none;
+			color: #333;
+			font-weight: bold;
+			min-width: 180px;
+			flex: 1;
+			transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+		}
+
+		.menu-card:hover {
+			transform: translateY(-3px);
+			box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+			border-color: #1f497d;
+			color: #1f497d;
+		}
+
+		.menu-icon {
+			font-size: 36px;
+			margin-bottom: 10px;
+		}
+
+		.closet-grid {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 15px;
+			padding: 0;
+		}
+
+		.closet-item {
+			width: calc(20% - 12px);
+			min-width: 160px;
+			position: relative;
+			border-radius: 8px;
+			overflow: hidden;
+			background: #eee;
+			aspect-ratio: 3 / 4;
+			box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+		}
+
+		.item-image {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+			background: #e0d0d8;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 42px;
+		}
+
+		.item-mask {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background-color: rgba(31, 73, 125, 0.85);
+			color: white;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			opacity: 0;
+			transition: opacity 0.3s ease;
+			padding: 15px;
+			box-sizing: border-box;
+			text-align: center;
+		}
+
+		.closet-item:hover .item-mask {
+			opacity: 1;
+		}
+
+		.item-title {
+			font-size: 15px;
+			font-weight: bold;
+			margin-bottom: 6px;
+			width: 100%;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+
+		.item-brand {
+			font-size: 12px;
+			opacity: 0.9;
+			width: 100%;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+	</style>
+</head>
+
+<body>
+	<div th:replace="~{common/header :: welcomeHeader}"></div>
+	
+	<!-- 🌸 【絶対にフリーズしない安全対策】データをカンマ区切りのただの文字列としてタグに埋め込みます -->
+	<input type="hidden" id="rawBrandLabels" th:value="${#strings.arrayJoin(brandLabels, ',')}" />
+	<input type="hidden" id="rawBrandCounts" th:value="${#strings.arrayJoin(brandCounts, ',')}" />
+
+	<input type="hidden" id="rawColorLabels" th:value="${#strings.arrayJoin(colorLabels, ',')}" />
+	<input type="hidden" id="rawColorCounts" th:value="${#strings.arrayJoin(colorCounts, ',')}" />
+
+	<input type="hidden" id="rawCategoryLabels" th:value="${#strings.arrayJoin(categoryLabels, ',')}" />
+	<input type="hidden" id="rawCategoryCounts" th:value="${#strings.arrayJoin(categoryCounts, ',')}" />
+
+	<h1>🏰 My Lolita Closet Dashboard</h1>
+
+	<!-- 🧱 ブロック①：登録統計ダッシュボード -->
+	<div class="category-block">
+		<div class="block-title">📊 クローゼット統計ダッシュボード（大物アイテム対象）</div>
+
+		<div class="stat-box">
+			<div style="font-size: 14px; font-weight: bold; color: #555;">👗 クローゼットの全アイテム総数</div>
+			<div class="stat-number"><span th:text="${totalItems}">0</span> <span
+					style="font-size: 14px; color: #555; font-weight: normal;">着</span></div>
+		</div>
+
+		<div class="graph-grid">
+			<div class="graph-box">
+				<div class="graph-title">🏰 所持ブランド比率</div>
+				<div style="width: 100%; height: 220px; position: relative; display: flex; justify-content: center;">
+					<canvas id="brandChart"></canvas>
+				</div>
+			</div>
+
+			<div class="graph-box">
+				<div class="graph-title">🎨 所持カラー比率</div>
+				<div style="width: 100%; height: 220px; position: relative; display: flex; justify-content: center;">
+					<canvas id="colorChart"></canvas>
+				</div>
+			</div>
+
+			<div class="graph-box" style="flex: 1.2;">
+				<div class="graph-title">👚 大物カテゴリ別着数</div>
+				<div style="width: 100%; height: 220px; position: relative;">
+					<canvas id="categoryChart"></canvas>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- 🧱 ブロック②：各機能へのクイックメニュー -->
+	<div class="category-block">
+		<div class="block-title">🚀 クイックメニュー</div>
+		<div class="form-grid">
+			<a th:href="@{/items}" class="menu-card">
+				<div class="menu-icon">👗</div>
+				<div style="font-size: 15px;">クローゼットを見る</div>
+				<div style="font-size: 11px; color: #777; font-weight: normal; margin-top: 4px;">お洋服の一覧・並び替え・検索</div>
+			</a>
+			<a th:href="@{/items/register}" class="menu-card">
+				<div class="menu-icon">➕</div>
+				<div style="font-size: 15px;">新しいお洋服を登録</div>
+				<div style="font-size: 11px; color: #777; font-weight: normal; margin-top: 4px;">新しくお迎えしたお洋服の追加</div>
+			</a>
+		</div>
+	</div>
+
+	<!-- 🧱 ブロック③：最近お迎えしたお洋服のプレビュー（最大5件） -->
+	<div class="category-block" th:unless="${#lists.isEmpty(recentItems)}">
+		<div class="block-title">💖 最近お迎えしたアイテム（最新5件）</div>
+		<div class="closet-grid">
+			<a th:each="item : ${recentItems}" th:href="@{/items/{id}(id=${item.itemId})}" class="closet-item"
+				style="text-decoration: none;">
+				<img th:if="${item.images != null and not #lists.isEmpty(item.images)}"
+					th:src="@{/uploads/{path}(path=${item.images[0].imagePath})}" class="item-image" alt="お洋服の写真">
+				<div th:if="${item.images == null or #lists.isEmpty(item.images)}" class="item-image">👚</div>
+				<div class="item-mask">
+					<div class="item-title" th:text="${item.itemName}">ここに商品名が入る</div>
+					<div class="item-brand" style="margin-bottom: 5px;">
+						ブランド：<span th:text="${item.brand != null ? item.brand.brandName : '不明'}">ブランド名</span>
+					</div>
+					<div class="item-brand">
+						購入価格：<span
+							th:text="${item.purchasePrice != null} ? ${#numbers.formatInteger(item.purchasePrice, 1, 'COMMA')} : '0'">0</span>円
+					</div>
+				</div>
+			</a>
+		</div>
+	</div>
+
+	<!-- 🌟 【安全第一】Thymeleafのインライン構文を廃止し、Hiddenタグからプレーンテキストを切り分ける制御スクリプト -->
+	<script>
+		// カンマ区切りの文字列を安全に配列化する魔法
+		function getArrayFromHidden(id, isNumber) {
+			const el = document.getElementById(id);
+			if (!el || !el.value || el.value.trim() === "") return [];
+			const arr = el.value.split(',');
+			return isNumber ? arr.map(v => parseInt(nowText = v.trim(), 10) || 0) : arr.map(v => v.trim());
+		}
+
+		window.addEventListener('DOMContentLoaded', () => {
+			// 隠しタグからデータを安全に復元
+			const brandLabels = getArrayFromHidden('rawBrandLabels', false);
+			const brandCounts = getArrayFromHidden('rawBrandCounts', true);
+
+			const colorLabels = getArrayFromHidden('rawColorLabels', false);
+			const colorCounts = getArrayFromHidden('rawColorCounts', true);
+
+			const categoryLabels = getArrayFromHidden('rawCategoryLabels', false);
+			const categoryCounts = getArrayFromHidden('rawCategoryCounts', true);
+
+			// 🌸 ①ブランド・カテゴリ用の基本パステルカラー
+			const defaultColors = [
+				'#f4cfdf', '#b6cfec', '#d9ebcf', '#fbeecc', '#e0cfeb',
+				'#cff1ef', '#fcd9cc', '#e1e1e1', '#b8e3de', '#f5e4cc'
+			];
+
+			// 🌸 ②【カラー系統連動】マスタの名前に合わせてクラシックなお色を自動マッピング
+			const mapColorNameToHex = (labels) => {
+				if (!labels) return defaultColors;
+				return labels.map(label => {
+					if (label.contains || label.includes("ピンク")) return '#f4cfdf'; // クラシックピンク
+					if (label.contains || label.includes("黒") || label.includes("ブラック")) return '#888888'; // 深いグレー（黒）
+					if (label.contains || label.includes("白") || label.includes("ホワイト")) return '#ffffff'; // ホワイト（枠線で見やすくします）
+					if (label.contains || label.includes("サックス") || label.includes("ブルー") || label.includes("青")) return '#b6cfec'; // シンデレラブルー
+					if (label.contains || label.includes("赤") || label.includes("ボルドーワイン")) return '#d9534f'; // 上品な赤
+					if (label.contains || label.includes("生成") || label.includes("アイボリー") || label.includes("ベージュ")) return '#fbeecc'; // クラシック生成
+					if (label.contains || label.includes("紫") || label.includes("ラベンダー")) return '#e0cfeb'; // ラベンダー
+					if (label.contains || label.includes("緑") || label.includes("グリーン")) return '#d9ebcf'; // ミントグリーン
+					if (label.contains || label.includes("茶") || label.includes("ブラウン")) return '#cd9a62'; // クラシックブラウン
+					return '#e1e1e1'; // それ以外の未知の色
+				});
+			};
+
+			// ① ブランド別 円グラフ
+			if (brandLabels && brandLabels.length > 0) {
+				new Chart(document.getElementById('brandChart'), {
+					type: 'pie',
+					data: {
+						labels: brandLabels,
+						datasets: [{
+							data: brandCounts,
+							backgroundColor: defaultColors
+						}]
+					},
+					options: {responsive: true, maintainAspectRatio: false}
+				});
+			}
+
+			// ② カラー系統別 円グラフ（🌸 カラー名と色を完全に同期させます）
+			if (colorLabels && colorLabels.length > 0) {
+				new Chart(document.getElementById('colorChart'), {
+					type: 'pie',
+					data: {
+						labels: colorLabels,
+						datasets: [{
+							data: colorCounts,
+							backgroundColor: mapColorNameToHex(colorLabels),
+							borderColor: '#ddd', // 白や薄い色のために上品な境界線を引きます
+							borderWidth: 1
+						}]
+					},
+					options: {responsive: true, maintainAspectRatio: false}
+				});
+			}
+
+			// ③ 主役カテゴリ別 棒グラフ
+			if (categoryLabels && categoryLabels.length > 0) {
+				new Chart(document.getElementById('categoryChart'), {
+					type: 'bar',
+					data: {
+						labels: categoryLabels,
+						datasets: [{
+							label: '着数',
+							data: categoryCounts,
+							backgroundColor: '#1f497d',
+							borderRadius: 4
+						}]
+					},
+					options: {
+						responsive: true,
+						maintainAspectRatio: false,
+						plugins: {legend: {display: false}},
+						scales: {
+							y: {beginAtZero: true, ticks: {stepSize: 1, precision: 0}}
+						}
+					}
+				});
+			}
+		});
+
+	</script>
+</body>
+
+</html>

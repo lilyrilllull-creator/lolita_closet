@@ -1,0 +1,15 @@
+<!-- 🏰 アプリ全体で使い回す共通ヘッダー部品（ユーザー名＆ログアウトボタン限定版） -->
+<div th:fragment="welcomeHeader" style="text-align: right; padding: 10px 40px; background-color: #faf8fc; font-size: 13px; color: #1f497d; font-weight: bold; border-bottom: 1px dashed #e0cfeb; display: flex; justify-content: flex-end; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.01);">
+    
+    <!-- 右側：ウェルカム名 ＆ POST形式ログアウトボタンのみに絞り込みました -->
+    <div style="display: flex; align-items: center; gap: 15px;">
+        <span>
+            🏰 ようこそ、<span style="color: #d15184; font-size: 14px;" th:text="${#authentication.name}">ユーザー名</span> 様 🌹
+        </span>
+        <form th:action="@{/logout}" method="post" style="margin: 0; padding: 0; display: inline;">
+            <button type="submit" style="color: #666; text-decoration: none; border: 1px solid #ccc; padding: 3px 12px; border-radius: 4px; background: white; font-size: 11px; font-weight: bold; cursor: pointer; font-family: inherit;">
+                ログアウト
+            </button>
+        </form>
+    </div>
+</div>

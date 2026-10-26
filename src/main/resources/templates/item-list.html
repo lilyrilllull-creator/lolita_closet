@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html xmlns:th="http://thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<title>My Lolita Closet - クローゼット一覧</title>
+
+	<style>
+		body {
+			font-family: 'Meiryo UI', sans-serif;
+			margin: 40px;
+			background-color: #fcfcfc;
+			color: #333;
+		}
+
+		h1 {
+			border-bottom: 2px solid #1f497d;
+			padding-bottom: 10px;
+			color: #1f497d;
+		}
+
+		/* ⚙️ ボタン装飾群 */
+		.btn {
+			display: inline-block;
+			padding: 10px 20px;
+			background-color: #1f497d;
+			color: white;
+			text-decoration: none;
+			border-radius: 4px;
+			font-weight: bold;
+			margin-bottom: 30px;
+		}
+
+		.btn:hover {
+			background-color: #143256;
+		}
+
+		.btn-home {
+			display: inline-block;
+			padding: 9px 20px;
+			background-color: white;
+			color: #1f497d;
+			border: 1px solid #1f497d;
+			text-decoration: none;
+			border-radius: 4px;
+			font-weight: bold;
+			margin-bottom: 30px;
+			margin-right: 10px;
+			box-sizing: border-box;
+		}
+
+		.btn-home:hover {
+			background-color: #f0f4f8;
+		}
+
+		/* 5列配置用のグリッド・カードデザイン */
+		.closet-grid {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 15px;
+			padding: 0;
+		}
+
+		.closet-item {
+			width: calc(20% - 12px);
+			min-width: 160px;
+			position: relative;
+			border-radius: 8px;
+			overflow: hidden;
+			background: #eee;
+			aspect-ratio: 3 / 4;
+			box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+		}
+
+		.item-image {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+			background: #e0d0d8;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 42px;
+		}
+
+		.item-mask {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background-color: rgba(31, 73, 125, 0.85);
+			color: white;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			opacity: 0;
+			transition: opacity 0.3s ease;
+			padding: 15px;
+			box-sizing: border-box;
+			text-align: center;
+		}
+
+		.closet-item:hover .item-mask {
+			opacity: 1;
+		}
+
+		.item-title {
+			font-size: 15px;
+			font-weight: bold;
+			margin-bottom: 6px;
+			width: 100%;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+
+		.item-brand {
+			font-size: 12px;
+			opacity: 0.9;
+			width: 100%;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+
+		.empty-message {
+			background: #eee;
+			padding: 40px;
+			text-align: center;
+			border-radius: 8px;
+			color: #666;
+			margin-bottom: 30px;
+		}
+	</style>
+</head>
+
+<body>
+	<!-- 🏰 共通ウェルカムヘッダーの合流 -->
+	<div th:replace="~{common/header :: welcomeHeader}"></div>
+
+	<h1>👗 マイ・ロリータ・クローゼット</h1>
+
+	<a th:href="@{/}" class="btn-home">🏰 ホームに戻る</a>
+	<a th:href="@{/items/register}" class="btn">➕ 新しいお洋服を登録する</a>
+
+	<!-- 🌸 箱の名前を itemPage.content に直して、お洋服が空っぽの時の条件を最適化 -->
+	<div th:if="${#lists.isEmpty(itemPage.content)}" class="empty-message">
+		<p>クローゼットはまだ空っぽです。上のボタンから最初のお洋服を登録してみましょう！</p>
+	</div>
+	<!-- 🔍 検索・絞り込みコントロールパネル -->
+	<form th:action="@{/items}" method="get" id="searchForm"
+		style="background: white; border: 1px solid #ddd; border-radius: 8px; padding: 20px 25px; margin-bottom: 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); box-sizing: border-box; display: flex; flex-direction: column; gap: 18px;">
+
+		<!-- 📑 【1行目：基本操作】検索入力＆ボタン ＆ ソート ＆ 順序 -->
+		<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 25px;">
+
+			<!-- 🔍 ① キーワード検索入力欄 -->
+			<div style="display: flex; align-items: center; gap: 10px; width: 380px;">
+				<label
+					style="font-weight: bold; color: #555; white-space: nowrap; margin-bottom: 0; font-size: 13px;">検索ワード:</label>
+				<input type="text" name="keyword" th:value="${param.keyword}" placeholder="商品名で検索..."
+					style="flex: 1; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box;">
+				<button type="submit" class="btn"
+					style="margin-bottom: 0; padding: 8px 20px; font-size: 14px; height: 37px; line-height: 19px; box-sizing: border-box; white-space: nowrap;">🔍
+					検索</button>
+			</div>
+
+			<!-- 🔃 ② 並び替え項目選択 -->
+			<div style="display: flex; align-items: center; gap: 10px;">
+				<label
+					style="font-weight: bold; color: #555; white-space: nowrap; margin-bottom: 0; font-size: 13px;">並び替え:</label>
+				<select name="sort" onchange="this.form.submit()"
+					style="padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; background: white; color: #333; cursor: pointer;">
+					<option value="createdAt" th:selected="${param.sort == null or param.sort == 'createdAt'}">📅 登録日順
+					</option>
+					<option value="purchaseDate" th:selected="${param.sort != null and param.sort == 'purchaseDate'}">👜
+						お迎え日順</option>
+					<option value="purchasePrice" th:selected="${param.sort != null and param.sort == 'purchasePrice'}">
+						💰 購入価格順</option>
+					<option value="brandId" th:selected="${param.sort != null and param.sort == 'brandId'}">🏰 ブランド順
+					</option>
+				</select>
+			</div>
+
+			<!-- 🔼🔽 ③ 順序切り替えトグル -->
+			<div style="display: flex; align-items: center; gap: 10px;">
+				<label
+					style="font-weight: bold; color: #555; white-space: nowrap; margin-bottom: 0; font-size: 13px;">並び順序:</label>
+				<div class="status-button-group"
+					style="width: 160px; border: 1px solid #1f497d; border-radius: 4px; display: flex; overflow: hidden; height: 35px; box-sizing: border-box;">
+					<div class="status-toggle" style="flex: 1; display: flex;">
+						<input type="radio" id="dirAsc" name="direction" value="asc"
+							th:checked="${param.direction == null or param.direction == 'asc'}"
+							onchange="this.form.submit()" style="display: none;">
+						<label for="dirAsc" class="status-label"
+							th:style="${param.direction == null or param.direction == 'asc'} ? 'background: #1f497d; color: white; flex: 1; text-align: center; line-height: 33px; font-weight: bold; cursor: pointer; font-size: 12px;' : 'background: white; color: #1f497d; flex: 1; text-align: center; line-height: 33px; font-weight: bold; cursor: pointer; font-size: 12px;'">🔼
+							昇順</label>
+					</div>
+					<div class="status-toggle" style="flex: 1; display: flex;">
+						<input type="radio" id="dirDesc" name="direction" value="desc"
+							th:checked="${param.direction != null and param.direction == 'desc'}"
+							onchange="this.form.submit()" style="display: none;">
+						<label for="dirDesc" class="status-label"
+							th:style="${param.direction != null and param.direction == 'desc'} ? 'background: #1f497d; color: white; flex: 1; text-align: center; line-height: 33px; font-weight: bold; cursor: pointer; font-size: 12px;' : 'background: white; color: #1f497d; flex: 1; text-align: center; line-height: 33px; font-weight: bold; cursor: pointer; font-size: 12px;'">🔽
+							降順</label>
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+		<hr style="border: none; border-top: 1px dashed #eee; margin: 2px 0;">
+		<!-- 👗 【2行目：複数選択フィルター】カテゴリ ＆ ブランド ＆ カラー系統 -->
+		<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 20px;">
+
+			<!-- 👗 ④ カテゴリ複数絞り込み -->
+			<div style="position: relative; display: flex; align-items: center; gap: 10px;">
+				<label
+					style="font-weight: bold; color: #555; white-space: nowrap; margin-bottom: 0; font-size: 13px;">カテゴリ:</label>
+				<div style="position: relative; display: inline-block;">
+					<button type="button" onclick="toggleDropdown('dropdownCategory')"
+						style="padding: 8px 15px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; background: white; color: #333; cursor: pointer; min-width: 150px; text-align: left; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+						<span id="btnTextCategory">選択する...</span><span style="font-size: 10px; color: #777;">▼</span>
+					</button>
+					<div id="dropdownCategory"
+						style="display: none; position: absolute; top: 100%; left: 0; background: white; border: 1px solid #ccc; border-radius: 4px; padding: 10px; min-width: 200px; max-height: 250px; overflow-y: auto; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+						<div th:each="mc : ${mainCategories}"
+							style="margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
+							<input type="checkbox" name="mainCategoryIds" th:value="${mc.mainCategoryId}"
+								th:id="'mc_' + ${mc.mainCategoryId}"
+								th:checked="${param.mainCategoryIds != null and #arrays.contains(param.mainCategoryIds, mc.mainCategoryId.toString())}"
+								onchange="this.form.submit()">
+							<label th:for="'mc_' + ${mc.mainCategoryId}" th:text="${mc.mainCategoryName}"
+								style="margin-bottom: 0; font-size: 13px; font-weight: normal; cursor: pointer; color: #333; white-space: nowrap;">ワンピース</label>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- 🏰 ⑤ ブランド複数絞り込み（チェックボックスを完全に復活しました！） -->
+			<div style="position: relative; display: flex; align-items: center; gap: 10px;">
+				<label
+					style="font-weight: bold; color: #555; white-space: nowrap; margin-bottom: 0; font-size: 13px;">ブランド:</label>
+				<div style="position: relative; display: inline-block;">
+					<button type="button" onclick="toggleDropdown('dropdownBrand')"
+						style="padding: 8px 15px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; background: white; color: #333; cursor: pointer; min-width: 160px; text-align: left; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+						<span id="btnTextBrand">選択する...</span><span style="font-size: 10px; color: #777;">▼</span>
+					</button>
+					<div id="dropdownBrand"
+						style="display: none; position: absolute; top: 100%; left: 0; background: white; border: 1px solid #ccc; border-radius: 4px; padding: 10px; min-width: 220px; max-height: 250px; overflow-y: auto; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+						<div th:each="b : ${brands}"
+							style="margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
+							<input type="checkbox" name="brandIds" th:value="${b.brandId}" th:id="'b_' + ${b.brandId}"
+								th:checked="${param.brandIds != null and #arrays.contains(param.brandIds, b.brandId.toString())}"
+								onchange="this.form.submit()">
+							<label th:for="'b_' + ${b.brandId}" th:text="${b.brandName}"
+								style="margin-bottom: 0; font-size: 13px; font-weight: normal; cursor: pointer; color: #333; white-space: nowrap;">ブランド名</label>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- 🎨 ⑥ カラー系統複数絞り込み -->
+			<div style="position: relative; display: flex; align-items: center; gap: 10px;">
+				<label
+					style="font-weight: bold; color: #555; white-space: nowrap; margin-bottom: 0; font-size: 13px;">カラー:</label>
+				<div style="position: relative; display: inline-block;">
+					<button type="button" onclick="toggleDropdown('dropdownColor')"
+						style="padding: 8px 15px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; background: white; color: #333; cursor: pointer; min-width: 150px; text-align: left; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+						<span id="btnTextColor">選択する...</span><span style="font-size: 10px; color: #777;">▼</span>
+					</button>
+					<div id="dropdownColor"
+						style="display: none; position: absolute; top: 100%; left: 0; background: white; border: 1px solid #ccc; border-radius: 4px; padding: 10px; min-width: 200px; max-height: 250px; overflow-y: auto; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+						<div th:each="c : ${colors}"
+							style="margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
+							<input type="checkbox" name="colorIds" th:value="${c.colorId}" th:id="'c_' + ${c.colorId}"
+								th:checked="${param.colorIds != null and #arrays.contains(param.colorIds, c.colorId.toString())}"
+								onchange="this.form.submit()">
+							<label th:for="'c_' + ${c.colorId}" th:text="${c.colorName}"
+								style="margin-bottom: 0; font-size: 13px; font-weight: normal; cursor: pointer; color: #333; white-space: nowrap;">カラー系統</label>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- ❌ ⑦ 絞り込みクリアリンク -->
+		<div style="margin-left: auto;"
+			th:if="${param.keyword != null or param.brandIds != null or param.colorIds != null or param.mainCategoryIds != null}">
+			<a th:href="@{/items}"
+				style="color: #d9534f; font-size: 13px; font-weight: bold; text-decoration: none; white-space: nowrap;">❌
+				絞り込みをすべてクリア</a>
+		</div>
+		</div>
+	</form>
+	<!-- 🌸 【完全修復版】チェックリストのフリーズを根絶するプルダウン制御JS -->
+	<script th:inline="javascript">
+		function toggleDropdown(id) {
+			const el = document.getElementById(id);
+			const isCurrentlyOpen = el.style.display === 'block';
+			document.getElementById('dropdownCategory').style.display = 'none';
+			document.getElementById('dropdownBrand').style.display = 'none';
+			document.getElementById('dropdownColor').style.display = 'none';
+			el.style.display = isCurrentlyOpen ? 'none' : 'block';
+		}
+
+		function updateButtonText(dropdownId, buttonTextId) {
+			const dropdown = document.getElementById(dropdownId);
+			const buttonText = document.getElementById(buttonTextId);
+			if (!dropdown || !buttonText) return;
+			const checkedLabels = [];
+			const checkboxes = dropdown.querySelectorAll('input[type="checkbox"]:checked');
+			checkboxes.forEach(cb => {
+				const label = dropdown.querySelector(`label[for="${cb.id}"]`);
+				if (label) checkedLabels.push(label.textContent.trim());
+			});
+			if (checkedLabels.length > 0) {
+				buttonText.textContent = checkedLabels.join(', ');
+			} else {
+				buttonText.textContent = '選択する...';
+			}
+		}
+
+		window.addEventListener('DOMContentLoaded', () => {
+			updateButtonText('dropdownCategory', 'btnTextCategory');
+			updateButtonText('dropdownBrand', 'btnTextBrand');
+			updateButtonText('dropdownColor', 'btnTextColor');
+		});
+
+		window.addEventListener('click', function (e) {
+			if (e.target.closest('button') || e.target.closest('[id^="dropdown"]')) return;
+			document.getElementById('dropdownCategory').style.display = 'none';
+			document.getElementById('dropdownBrand').style.display = 'none';
+			document.getElementById('dropdownColor').style.display = 'none';
+		});
+	</script>
+
+	<!-- 【上段】ページネーションエリア（余計なバックスラッシュを1文字残さず全消去しました！） -->
+	<div th:if="${itemPage.totalPages > 1}"
+		style="margin-bottom: 20px; display: flex; justify-content: flex-start; align-items: center; gap: 5px;">
+		<a th:if="${itemPage.number > 0}"
+			th:href="@{/items(keyword=${param.keyword}, sort=${param.sort}, direction=${param.direction}, page=${itemPage.number - 1})}"
+			style="display: inline-block; padding: 6px 12px; border: 1px solid #ddd; border-radius: 4px; color: #1f497d; text-decoration: none; font-size: 13px; font-weight: bold; background: white;">&lt;</a>
+		<a th:each="i : ${#numbers.sequence(0, itemPage.totalPages - 1)}"
+			th:href="@{/items(keyword=${param.keyword}, sort=${param.sort}, direction=${param.direction}, page=${i})}"
+			th:text="${i + 1}"
+			th:style="${i == itemPage.number} ? 'display: inline-block; padding: 6px 12px; border: 1px solid #1f497d; border-radius: 4px; color: white; background: #1f497d; text-decoration: none; font-size: 13px; font-weight: bold;' : 'display: inline-block; padding: 6px 12px; border: 1px solid #ddd; border-radius: 4px; color: #333; background: white; text-decoration: none; font-size: 13px;' ">1</a>
+		<a th:if="${itemPage.number < itemPage.totalPages - 1}"
+			th:href="@{/items(keyword=${param.keyword}, sort=${param.sort}, direction=${param.direction}, page=${itemPage.number + 1})}"
+			style="display: inline-block; padding: 6px 12px; border: 1px solid #ddd; border-radius: 4px; color: #1f497d; text-decoration: none; font-size: 13px; font-weight: bold; background: white;">&gt;</a>
+	</div>
+
+	<!-- 🌸 【完全大復活】余計なスラッシュや丸括弧を全消去し、お洋服たちを一斉に呼び出します！ -->
+	<div th:unless="${#lists.isEmpty(itemPage.content)}" class="closet-grid">
+		<a th:each="item : ${itemPage.content}" th:href="@{/items/{id}(id=${item.itemId})}" class="closet-item"
+			style="text-decoration: none;">
+			<!-- お写真の1枚目を安全にループ展開して表示します -->
+			<img th:if="${item.images != null and not #lists.isEmpty(item.images)}"
+				th:src="@{/uploads/{path}(path=${item.images[0].imagePath})}" class="item-image" alt="お洋服の写真">
+			<div th:if="${item.images == null or #lists.isEmpty(item.images)}" class="item-image">👚</div>
+
+			<div class="item-mask">
+				<div class="item-title" th:text="${item.itemName}">ここに商品名が入る</div>
+
+				<!-- 🌸【完全修正】抽出されたブランドリストの先頭（0番目）から、安全にbrandNameを引き出す形に直しました！ -->
+				<div class="item-brand" style="margin-bottom: 5px;">
+					ブランド：<span>[[${item.brandId != null and not #lists.isEmpty(brands.?[brandId == __${item.brandId}__]) ? brands.?[brandId == __${item.brandId}__][0].brandName : '不明'}]]</span>
+				</div>
+
+				<div class="item-brand">
+					購入価格：<span
+						th:text="${item.purchasePrice != null} ? ${#numbers.formatInteger(item.purchasePrice, 1, 'COMMA')} : '0'">0</span>円
+				</div>
+			</div>
+		</a>
+	</div>
+
+	<!-- 【下段】ページネーションエリア -->
+	<div th:if="${itemPage.totalPages > 1}"
+		style="margin-top: 30px; margin-bottom: 20px; display: flex; justify-content: flex-start; align-items: center; gap: 5px;">
+		<a th:if="${itemPage.number > 0}"
+			th:href="@{/items(keyword=${param.keyword}, sort=${param.sort}, direction=${param.direction}, page=${itemPage.number - 1})}"
+			style="display: inline-block; padding: 6px 12px; border: 1px solid #ddd; border-radius: 4px; color: #1f497d; text-decoration: none; font-size: 13px; font-weight: bold; background: white;">&lt;</a>
+		<a th:each="i : ${#numbers.sequence(0, itemPage.totalPages - 1)}"
+			th:href="@{/items(keyword=${param.keyword}, sort=${param.sort}, direction=${param.direction}, page=${i})}"
+			th:text="${i + 1}"
+			th:style="${i == itemPage.number} ? 'display: inline-block; padding: 6px 12px; border: 1px solid #1f497d; border-radius: 4px; color: white; background: #1f497d; text-decoration: none; font-size: 13px; font-weight: bold;' : 'display: inline-block; padding: 6px 12px; border: 1px solid #ddd; border-radius: 4px; color: #333; background: white; text-decoration: none; font-size: 13px;' ">1</a>
+		<a th:if="${itemPage.number < itemPage.totalPages - 1}"
+			th:href="@{/items(keyword=${param.keyword}, sort=${param.sort}, direction=${param.direction}, page=${itemPage.number + 1})}"
+			style="display: inline-block; padding: 6px 12px; border: 1px solid #ddd; border-radius: 4px; color: #1f497d; text-decoration: none; font-size: 13px; font-weight: bold; background: white;">&gt;</a>
+	</div>
+
+</body>
+
+</html>
